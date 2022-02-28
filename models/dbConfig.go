@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	_ "github.com/lib/pq"
 )
@@ -86,6 +87,25 @@ type Scanner interface {
 
 type Preparer interface {
 	Prepare(query string) (*sql.Stmt, error)
+}
+
+func ValidateUUID(id string) bool {
+	uuidSectionNum := 5
+	firstSectionLen := 8
+	lastSectionLen := 12
+	midSectionLen := 4
+	sp := strings.Split(id, "-")
+	if len(sp) != uuidSectionNum {
+		return false
+	} else if len(sp[0]) != firstSectionLen || len(sp[4]) != lastSectionLen {
+		return false
+	}
+	for i := 1; i < 4; i++ {
+		if len(sp[i]) != midSectionLen {
+			return false
+		}
+	}
+	return true
 }
 
 /* func findQueringSqlIndex(sqlArray []string) (int, error) {

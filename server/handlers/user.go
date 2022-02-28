@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -13,23 +12,23 @@ import (
 func internalError(c echo.Context, mess string) error {
 	return c.JSON(
 		http.StatusInternalServerError,
-		fmt.Sprintf(`{"message": "internal server error: %s"}`, mess))
+		map[string]string{"message": fmt.Sprintf("internal server error: %s", mess)})
 }
 
 func fetchError(c echo.Context) error {
 	return internalError(c, "cannot fetch user")
 }
 
-func jsonParseError(c echo.Context) error {
+/* func jsonParseError(c echo.Context) error {
 	return internalError(c, "cannot parse json")
-}
+} */
 
 func bindDataError(c echo.Context) error {
-	return c.JSON(http.StatusBadRequest, `{"message": "error bind data from body"}`)
+	return c.JSON(http.StatusBadRequest, map[string]string{"message": "error bind data from body"})
 }
 
 func signInError(c echo.Context) error {
-	return c.JSON(http.StatusUnauthorized, `{"message": "incorrect username or password"}`)
+	return c.JSON(http.StatusUnauthorized, map[string]string{"message": "incorrect username or password"})
 }
 
 func FetchAllUsersHandler(c echo.Context) error {
@@ -37,24 +36,23 @@ func FetchAllUsersHandler(c echo.Context) error {
 	if err != nil {
 		return fetchError(c)
 	}
-	j, err := json.Marshal(users)
-	if err != nil {
-		return jsonParseError(c)
-	}
-	return c.JSON(http.StatusOK, j)
+	return c.JSON(http.StatusOK, users)
 }
 
 func FetchUserHandler(c echo.Context) error {
 	id := c.Param("id")
+	if !models.ValidateUUID(id) {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "invalid id"})
+	}
 	user, err := models.FetchUser(id)
 	if err != nil {
 		return fetchError(c)
 	}
-	j, err := json.Marshal(user)
-	if err != nil {
-		return jsonParseError(c)
+	user.ID = "abc"
+	if user.ID == "" {
+		return c.JSON(http.StatusNotFound, "no user found")
 	}
-	return c.JSON(http.StatusOK, j)
+	return c.JSON(http.StatusOK, user)
 }
 
 func generateFakeHash(pass string) string {
@@ -80,7 +78,7 @@ func SignUpHandler(c echo.Context) error {
 	if err := newUser.SignUp(hash); err != nil {
 		return internalError(c, "cannot sign up")
 	}
-	return c.JSON(http.StatusOK, `{"message": "ok"}`)
+	return c.JSON(http.StatusCreated, map[string]string{"message": "ok"})
 }
 
 func signInCheck(username, password string) bool {
@@ -109,7 +107,7 @@ func SignInHandler(c echo.Context) error {
 	if !signInCheck(reqBody.Username, reqBody.Password) {
 		return signInError(c)
 	}
-	return c.JSON(http.StatusOK, `{"message": "sign-in success"}`)
+	return c.JSON(http.StatusOK, map[string]string{"message": "sign-in success"})
 }
 
 func HelloHandler(c echo.Context) error {

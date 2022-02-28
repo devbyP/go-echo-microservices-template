@@ -28,6 +28,5 @@ func main() {
 	models.SetDB(db)
 
 	server.SetPort(port)
-	log.Println("server start at port: " + port)
 	server.StartServer()
 }

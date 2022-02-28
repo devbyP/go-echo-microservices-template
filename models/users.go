@@ -27,7 +27,7 @@ func NewUser(fn, ln, un string) *User {
 
 func prepareUserSelectStmt(option string) (*sql.Stmt, error) {
 	sel := "SELECT id, first_name, last_name, username, join_date FROM users"
-	if strings.HasPrefix(strings.ToUpper(sel), "WHERE") {
+	if strings.HasPrefix(strings.ToUpper(option), "WHERE") {
 		return db.Prepare(sel + " " + option)
 	}
 	return db.Prepare(sel)
@@ -58,9 +58,17 @@ func (u *User) fetchRow(option string, args ...interface{}) error {
 		return err
 	}
 	defer stmt.Close()
-	row := stmt.QueryRow(args)
+	var row *sql.Row
+	if len(args) == 0 {
+		row = stmt.QueryRow()
+	} else {
+		row = stmt.QueryRow(args...)
+	}
 	err = u.scanUser(row)
 	if err != nil {
+		if err.Error() == sql.ErrNoRows.Error() {
+			return nil
+		}
 		return err
 	}
 	return nil
@@ -68,7 +76,7 @@ func (u *User) fetchRow(option string, args ...interface{}) error {
 
 func useUserFetchRow(option string, args ...interface{}) (*User, error) {
 	user := new(User)
-	err := user.fetchRow(option, args)
+	err := user.fetchRow(option, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -84,13 +92,19 @@ func FetchUserByUsername(uname string) (*User, error) {
 }
 
 func fetchMultiple(option string, args ...interface{}) ([]*User, error) {
+	var err error
 	users := make([]*User, 0)
 	stmt, err := prepareUserSelectStmt(option)
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
-	rows, err := stmt.Query(args)
+	var rows *sql.Rows
+	if len(args) == 0 {
+		rows, err = stmt.Query()
+	} else {
+		rows, err = stmt.Query(args...)
+	}
 	if err != nil {
 		return nil, err
 	}

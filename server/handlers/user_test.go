@@ -16,7 +16,7 @@ func init() {
 }
 
 func TestSignup(t *testing.T) {
-	db, err := models.ConnectDB()
+	db, err := models.ConnectDBDefault()
 	if err != nil {
 		t.Error("error connecting to test db")
 	}
@@ -43,7 +43,7 @@ func TestSignup(t *testing.T) {
 }
 
 func TestFetchUser(t *testing.T) {
-	db, err := models.ConnectDB()
+	db, err := models.ConnectDBDefault()
 	if err != nil {
 		t.Error("error connection to test db")
 	}

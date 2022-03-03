@@ -13,10 +13,14 @@ import (
 
 var db *sql.DB
 
-func ConnectDB() (*sql.DB, error) {
+func ConnectDBDefault() (*sql.DB, error) {
 	connect := conString{}
 	connect.prepareConnect()
-	return sql.Open("postgres", connect.getConnectionString())
+	return ConnectDB(connect.String())
+}
+
+func ConnectDB(connectionString string) (*sql.DB, error) {
+	return sql.Open("postgres", connectionString)
 }
 
 func SetDB(d *sql.DB) {
@@ -32,53 +36,74 @@ func GetDB() *sql.DB {
 }
 
 const (
-	disable = "disable"
-	require = "require"
-	ca      = "verify-ca"
-	full    = "verify-full"
+	Disable = iota
+	Require
+	Verify_ca
+	Verify_full
 )
 
 type sslMode string
 
+func setSSLMode(mode int) sslMode {
+	modeString := [4]sslMode{"disable", "require", "verify_ca", "verify_full"}
+	if mode > len(modeString) {
+		return "disable"
+	}
+	return modeString[mode]
+}
+
 type conString struct {
-	name     string
-	user     string
-	password string
-	host     string
-	port     int
+	Name     string
+	User     string
+	Password string
+	Host     string
+	Port     int
 	ssl      sslMode
 }
 
-func (c *conString) prepareConnect() {
+func NewConnectionString() *conString {
+	c := new(conString)
 	c.fill_default()
+	return c
+}
+
+func (c *conString) SetSSL(mode int) {
+	c.ssl = setSSLMode(mode)
+}
+
+func (c *conString) prepareConnect() {
 	var err error
-	c.host = os.Getenv("PGHOST")
-	c.name = os.Getenv("PGDATABASE")
-	c.password = os.Getenv("PGPASSWORD")
-	c.port, err = strconv.Atoi(os.Getenv("PGPORT"))
+	c.Host = os.Getenv("PGHOST")
+	c.Name = os.Getenv("PGDATABASE")
+	c.Password = os.Getenv("PGPASSWORD")
+	port := os.Getenv("PGPORT")
+	if port == "" {
+		port = "0"
+	}
+	c.Port, err = strconv.Atoi(port)
 	if err != nil {
-		log.Println("Error, db port num cannot convert to type int.", err)
+		log.Println("Error, db port cannot convert to type int.", err)
 		os.Exit(1)
 	}
-	c.user = os.Getenv("PGUSER")
-	c.ssl = disable
+	c.User = os.Getenv("PGUSER")
+	c.fill_default()
 }
 
 func (c *conString) fill_default() {
 	if c.ssl == "" {
-		c.ssl = disable
+		c.ssl = setSSLMode(Disable)
 	}
-	if c.port == 0 {
-		c.port = 5432
+	if c.Port == 0 {
+		c.Port = 5432
 	}
-	if c.host == "" {
-		c.host = "localhost"
+	if c.Host == "" {
+		c.Host = "localhost"
 	}
 }
 
-func (c conString) getConnectionString() string {
+func (c conString) String() string {
 	return fmt.Sprintf("dbname=%s user=%s password=%s host=%s port=%d sslmode=%s",
-		c.name, c.user, c.password, c.host, c.port, c.ssl)
+		c.Name, c.User, c.Password, c.Host, c.Port, c.ssl)
 }
 
 type Scanner interface {

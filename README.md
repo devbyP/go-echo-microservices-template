@@ -8,6 +8,16 @@ third party library dependency
 - joho godotenv
 - lib pq
 
+## Model Name
+
+After Change go model name (from "untitled")
+Don't foget to change model name in all import place.
+Here is the list of file that need to lookup.
+- server/server.go
+- server/urlMapping.go
+- server/handlers/user.go
+- main.go
+
 ## Usage
 
 change `test.env` to `.env`, or create your own .env file and add it to godotenv.Overload arguments

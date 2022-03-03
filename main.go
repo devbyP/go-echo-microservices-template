@@ -19,7 +19,7 @@ func init() {
 func main() {
 	port := os.Getenv("PORT")
 
-	db, err := models.ConnectDB()
+	db, err := models.ConnectDBDefault()
 	if err != nil {
 		log.Fatal("cannot connect to database")
 	}

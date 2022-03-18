@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/devbyP/untitled/models"
+	"github.com/devbyP/untitled/pkg/models"
 	"github.com/labstack/echo/v4"
 )
 

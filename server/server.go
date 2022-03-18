@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	myjwt "github.com/devbyP/untitled/jwt"
+	myjwt "github.com/devbyP/untitled/pkg/jwt"
 
 	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/labstack/echo/v4"

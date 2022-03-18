@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/devbyP/untitled/models"
+	"github.com/devbyP/untitled/pkg/models"
 	"github.com/devbyP/untitled/server"
 	"github.com/joho/godotenv"
 )

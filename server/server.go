@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -9,27 +8,42 @@ import (
 
 	myjwt "github.com/devbyP/untitled/pkg/jwt"
 
-	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 var port string
 
-func tokenMiddleware() echo.MiddlewareFunc {
+func tokenHeaderMiddleware() echo.MiddlewareFunc {
 	return middleware.JWTWithConfig(middleware.JWTConfig{
+		Skipper: func(c echo.Context) bool {
+			if c.Request().Header.Get("Authorization") == "" {
+				return true
+			}
+			return false
+		},
 		TokenLookup:   "header:Authorization",
 		AuthScheme:    "JWT",
 		SigningMethod: middleware.AlgorithmHS256,
+		ParseTokenFunc: func(auth string, c echo.Context) (any, error) {
+			return myjwt.ValidateToken(auth)
+		},
+		ErrorHandlerWithContext: func(err error, c echo.Context) error {
+			if strings.Contains(err.Error(), "token is expired") {
+				return c.JSON(http.StatusUnauthorized, map[string]string{"message": "token is expired"})
+			}
+			return c.JSON(http.StatusBadRequest, map[string]string{"message": "not authorize"})
+		},
+	})
+}
+
+func tokenCookieMiddleware() echo.MiddlewareFunc {
+	return middleware.JWTWithConfig(middleware.JWTConfig{
+		TokenLookup:   "cookie:aToken",
+		AuthScheme:    "",
+		SigningMethod: middleware.AlgorithmHS256,
 		ParseTokenFunc: func(auth string, c echo.Context) (interface{}, error) {
-			token, err := jwt.ParseWithClaims(auth, &jwt.StandardClaims{}, myjwt.MyKeyFunc)
-			if err != nil {
-				return nil, err
-			}
-			if !token.Valid {
-				return nil, fmt.Errorf("invalid token")
-			}
-			return token, nil
+			return myjwt.ValidateToken(auth)
 		},
 		ErrorHandlerWithContext: func(err error, c echo.Context) error {
 			if strings.Contains(err.Error(), "token is expired") {
@@ -57,7 +71,8 @@ func PrintPort() {
 func serverMiddlewares(e *echo.Echo) {
 	e.Use(customLogger())
 	e.Use(middleware.Recover())
-	e.Use(tokenMiddleware())
+	e.Use(tokenHeaderMiddleware())
+	e.Use(tokenCookieMiddleware())
 }
 
 func StartServer() {

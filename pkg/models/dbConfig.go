@@ -1,17 +1,27 @@
 package models
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	_ "github.com/lib/pq"
 )
 
 var db *sql.DB
+
+// use this context on db function.
+// ex: QueryContext(getSqlContext(), "SQL STATEMENT")
+// timeout set to 2 minute
+func getSqlContext() (context.Context, context.CancelFunc) {
+	contextTimeout := time.Duration(2) * time.Minute
+	return context.WithTimeout(context.TODO(), contextTimeout)
+}
 
 func ConnectDBDefault() (*sql.DB, error) {
 	connect := conString{}

@@ -39,6 +39,12 @@ func tokenHeaderMiddleware() echo.MiddlewareFunc {
 
 func tokenCookieMiddleware() echo.MiddlewareFunc {
 	return middleware.JWTWithConfig(middleware.JWTConfig{
+    Skipper: func(c echo.Context) bool {
+			if c.Request().Header.Get("Authorization") != "" {
+        return true
+      }
+      return false
+    },
 		TokenLookup:   "cookie:aToken",
 		AuthScheme:    "",
 		SigningMethod: middleware.AlgorithmHS256,

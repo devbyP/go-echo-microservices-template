@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -9,32 +8,10 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func internalError(c echo.Context, mess string) error {
-	return c.JSON(
-		http.StatusInternalServerError,
-		map[string]string{"message": fmt.Sprintf("internal server error: %s", mess)})
-}
-
-func fetchError(c echo.Context) error {
-	return internalError(c, "cannot fetch user")
-}
-
-/* func jsonParseError(c echo.Context) error {
-	return internalError(c, "cannot parse json")
-} */
-
-func bindDataError(c echo.Context) error {
-	return c.JSON(http.StatusBadRequest, map[string]string{"message": "error bind data from body"})
-}
-
-func signInError(c echo.Context) error {
-	return c.JSON(http.StatusUnauthorized, map[string]string{"message": "incorrect username or password"})
-}
-
 func FetchAllUsersHandler(c echo.Context) error {
 	users, err := models.FetchAllUser()
 	if err != nil {
-		return fetchError(c)
+		return fetchError(c, err)
 	}
 	return c.JSON(http.StatusOK, users)
 }
@@ -46,7 +23,7 @@ func FetchUserHandler(c echo.Context) error {
 	}
 	user, err := models.FetchUser(id)
 	if err != nil {
-		return fetchError(c)
+		return fetchError(c, err)
 	}
 	user.ID = "abc"
 	if user.ID == "" {
@@ -76,7 +53,7 @@ func SignUpHandler(c echo.Context) error {
 	newUser := models.NewUser(reqBody.FirstName, reqBody.LastName, reqBody.Username)
 	hash := generateFakeHash(reqBody.Password)
 	if err := newUser.SignUp(hash); err != nil {
-		return internalError(c, "cannot sign up")
+		return internalError(c, "cannot sign up", err)
 	}
 	return c.JSON(http.StatusCreated, map[string]string{"message": "ok"})
 }

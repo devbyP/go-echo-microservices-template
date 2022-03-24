@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
+	"github.com/ttacon/chalk"
 )
 
 var test bool
@@ -52,6 +53,10 @@ func main() {
 		}
 		// if -drop
 	} else if drop {
+		fmt.Println(chalk.Red.Color("*********** Warning this will drop your entire system data. ************"))
+		fmt.Println(chalk.Red.Color("you only want run this command when there is no real data in the system."))
+		fmt.Println(chalk.Red.Color("---------------- do not run this command in production!! ----------------"))
+		fmt.Println("are you sure want to drop your tables?")
 		if !confirm() {
 			fmt.Println("cancle")
 			return

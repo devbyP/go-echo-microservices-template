@@ -9,14 +9,20 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func init() {
-	err := godotenv.Overload()
+func loadEnv() {
+	var err error
+	if os.Getenv("GO_DEV") == "development" {
+		err = godotenv.Overload()
+	} else {
+		err = godotenv.Load()
+	}
 	if err != nil {
 		log.Fatal("error load dotenv file")
 	}
 }
 
 func main() {
+	loadEnv()
 	port := os.Getenv("PORT")
 
 	db, err := models.ConnectDBDefault()
